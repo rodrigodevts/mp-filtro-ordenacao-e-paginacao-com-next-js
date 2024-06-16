@@ -10,8 +10,37 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { Links } from '@/lib/types';
+import { api } from '@/services/api';
 
-export default async function Component() {
+type ComponentsProps = {
+  searchParams?: {
+    search?: string;
+    status?: string;
+    sort?: string;
+    page?: string;
+  }
+}
+
+export default async function Component({ searchParams }: ComponentsProps) {
+  // fetch dos dados
+  const response = await api.get('/orders', {
+    params: {
+      search: searchParams?.search,
+      status: searchParams?.status,
+      sort: searchParams?.sort,
+      page: searchParams?.page,
+    }
+  });
+
+  const orders = response.data.data;
+  let links: Links[] = response.data.meta.links;
+  const lastPage = response.data.meta.last_page;
+
+  links = links.map((link, index) => (
+    { ...link, id: index }
+  ));
+
   return (
     <main className="container px-1 py-10 md:p-10">
       <Card>
@@ -26,9 +55,9 @@ export default async function Component() {
           </div>
         </CardHeader>
         <CardContent>
-          <OrdersTable />
+          <OrdersTable orders={orders} />
           <div className="mt-8">
-            <Pagination />
+            <Pagination links={links} lastPage={lastPage} />
           </div>
         </CardContent>
       </Card>
